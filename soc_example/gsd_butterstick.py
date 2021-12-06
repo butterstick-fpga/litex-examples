@@ -8,9 +8,8 @@
 # SPDX-License-Identifier: BSD-2-Clause
 
 # Build/Use:
-# ./gsd_butterstick.py --uart-name=crossover --with-etherbone --csr-csv=csr.csv --build --load
-# litex_server --udp
-# litex_term bridge
+# ./gsd_butterstick.py --sdram-device MT41K64M16 --build --load
+# litex_term /dev/ttyACM0
 
 import os
 import sys
@@ -74,7 +73,7 @@ class _CRG(Module):
 
         # PLL
         self.submodules.pll = pll = ECP5PLL()
-        self.comb += pll.reset.eq(~por_done | ~rst_n | self.rst)
+        self.comb += pll.reset.eq(~por_done | ~rst_n)
         pll.register_clkin(clk30, 30e6)
         pll.create_clkout(self.cd_sys2x_i, 2*sys_clk_freq)
         pll.create_clkout(self.cd_init,   25e6)
@@ -90,7 +89,7 @@ class _CRG(Module):
                 i_RST     = self.reset,
                 o_CDIVX   = self.cd_sys.clk),
             AsyncResetSynchronizer(self.cd_sys,    ~pll.locked | self.reset),
-            AsyncResetSynchronizer(self.cd_usb,    ~pll.locked | self.reset),
+            AsyncResetSynchronizer(self.cd_usb,    ~pll.locked),
             AsyncResetSynchronizer(self.cd_sys2x,  ~pll.locked | self.reset),
         ]
 
