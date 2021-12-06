@@ -90,6 +90,7 @@ class _CRG(Module):
                 i_RST     = self.reset,
                 o_CDIVX   = self.cd_sys.clk),
             AsyncResetSynchronizer(self.cd_sys,    ~pll.locked | self.reset),
+            AsyncResetSynchronizer(self.cd_usb,    ~pll.locked | self.reset),
             AsyncResetSynchronizer(self.cd_sys2x,  ~pll.locked | self.reset),
         ]
 
@@ -110,12 +111,11 @@ class BaseSoC(SoCCore):
 
         vccio_ctrl = platform.request("vccio_ctrl")
 
-        self.comb += [
-            vccio_ctrl.pdm.eq(0b000),
+        self.sync.por += [
+            vccio_ctrl.pdm.eq(~vccio_ctrl.pdm),
             vccio_ctrl.en.eq(1),
         ]
 
-        
         kwargs["uart_name"] = "stream"
         
         # SoCCore ----------------------------------------------------------------------------------
@@ -216,13 +216,13 @@ def main():
         toolchain      = args.toolchain,
         revision       = args.revision,
         device         = args.device,
+        sdram_device   = args.sdram_device,
         sys_clk_freq   = int(float(args.sys_clk_freq)),
         with_ethernet  = args.with_ethernet,
         with_etherbone = args.with_etherbone,
         eth_ip         = args.eth_ip,
         eth_dynamic_ip = args.eth_dynamic_ip,
         with_spi_flash = args.with_spi_flash,
-        sdram_device   = args.sdram_device,
         **soc_core_argdict(args))
     if args.with_spi_sdcard:
         soc.add_spi_sdcard()
